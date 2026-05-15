@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link } ;
 import { Home, Compass, Swords, MessageCircle, User } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
@@ -14,7 +14,7 @@ const tabs: Tab[] = [
 ];
 
 export function BottomNav() {
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const pathname = useLocation().pathname;
   const { user } = useAuth();
   const [unread, setUnread] = useState(0);
 

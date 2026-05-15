@@ -1,12 +1,12 @@
 import { useEffect, ReactNode } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } ;
 import { useAuth } from "@/lib/auth";
 
 const PUBLIC_ROUTES = new Set(["/login", "/signup"]);
 
 export function AuthGate({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth();
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const pathname = useLocation().pathname;
   const nav = useNavigate();
   const isPublic = PUBLIC_ROUTES.has(pathname);
 
