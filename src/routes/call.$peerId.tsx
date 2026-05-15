@@ -1,20 +1,23 @@
-import { useNavigate, useSearch } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { AppShell } from "@/components/app-shell";
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { ArrowLeft, Mic, MicOff, Video, VideoOff, PhoneOff } from "lucide-react";
 import { Room, RoomEvent, Track, type RemoteTrack, type RemoteParticipant, createLocalTracks } from "livekit-client";
+import { supabase } from "@/integrations/supabase/client";
 
-,
-  head: () => ({ meta: [{ title: "Call — MindSprint" }] }),
-});
+async function issueToken(payload: { room: string; identity: string }) {
+  const { data, error } = await supabase.functions.invoke("livekit-token", { body: payload });
+  if (error) throw error;
+  return data as { token: string; url: string };
+}
 
 function CallPage() {
-  const { peerId } = useParams() as any;
-  const { video } = useSearch({ from: "/call/$peerId" });
+  const { peerId } = useParams() as { peerId: string };
+  const [sp] = useSearchParams();
+  const video = sp.get("video") === "1";
   const { user } = useAuth();
   const nav = useNavigate();
-  const issueToken = useServerFn(issueLivekitToken);
   const [room, setRoom] = useState<Room | null>(null);
   const [muted, setMuted] = useState(false);
   const [camOn, setCamOn] = useState(!!video);
@@ -28,7 +31,7 @@ function CallPage() {
     let cancelled = false;
     (async () => {
       const roomName = [user.id, peerId].sort().join("__");
-      const { token, url } = await issueToken({ data: { room: roomName, identity: user.id } });
+      const { token, url } = await issueToken({ room: roomName, identity: user.id });
       r = new Room({ adaptiveStream: true, dynacast: true });
       r.on(RoomEvent.TrackSubscribed, (track: RemoteTrack, _pub, _participant: RemoteParticipant) => {
         if (track.kind === Track.Kind.Video && remoteVideoRef.current) track.attach(remoteVideoRef.current);
