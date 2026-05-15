@@ -212,7 +212,7 @@ function DuelPage() {
           </div>
           <div className="mt-1 text-sm text-muted-foreground">Final {myScore} - {oppScore}</div>
           <div className="mt-4 flex gap-2">
-            <button onClick={() => nav({ to: "/recap/$duelId", params: { duelId } })} className="flex-1 rounded-full gradient-primary px-6 py-2 text-sm font-bold text-primary-foreground">
+            <button onClick={() => nav(`/recap/${duelId}`)} className="flex-1 rounded-full gradient-primary px-6 py-2 text-sm font-bold text-primary-foreground">
               View recap
             </button>
             <button onClick={() => nav("/arena")} className="flex-1 rounded-full glass-strong px-6 py-2 text-sm font-bold">

@@ -143,8 +143,8 @@ function ChatPage() {
             </div>
           </div>
           <div className="flex gap-1">
-            <button onClick={() => nav({ to: "/call/$peerId", params: { peerId: userId }, search: { video: false } })} className="rounded-full glass p-2" aria-label="Voice"><Phone className="h-4 w-4" /></button>
-            <button onClick={() => nav({ to: "/call/$peerId", params: { peerId: userId }, search: { video: true } })} className="rounded-full glass p-2" aria-label="Video"><Video className="h-4 w-4" /></button>
+            <button onClick={() => nav(`/call/${userId}?video=0`)} className="rounded-full glass p-2" aria-label="Voice"><Phone className="h-4 w-4" /></button>
+            <button onClick={() => nav(`/call/${userId}?video=1`)} className="rounded-full glass p-2" aria-label="Video"><Video className="h-4 w-4" /></button>
             <button onClick={() => bgRef.current?.click()} className="rounded-full glass p-2" aria-label="Background"><ImgIcon className="h-4 w-4" /></button>
             <input ref={bgRef} type="file" accept="image/*" hidden onChange={setBg} />
           </div>
