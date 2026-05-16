@@ -58,39 +58,51 @@ export type Database = {
       }
       challenges: {
         Row: {
+          active_on: string | null
           answer: string
+          category: string
           created_at: string
           creator_id: string
           difficulty: Database["public"]["Enums"]["difficulty"]
           id: string
+          is_daily: boolean
           options: string[]
           question: string
           reward_xp: number
           solved_count: number
+          source_question_id: string | null
           time_limit: number
         }
         Insert: {
+          active_on?: string | null
           answer: string
+          category?: string
           created_at?: string
           creator_id: string
           difficulty?: Database["public"]["Enums"]["difficulty"]
           id?: string
+          is_daily?: boolean
           options?: string[]
           question: string
           reward_xp?: number
           solved_count?: number
+          source_question_id?: string | null
           time_limit?: number
         }
         Update: {
+          active_on?: string | null
           answer?: string
+          category?: string
           created_at?: string
           creator_id?: string
           difficulty?: Database["public"]["Enums"]["difficulty"]
           id?: string
+          is_daily?: boolean
           options?: string[]
           question?: string
           reward_xp?: number
           solved_count?: number
+          source_question_id?: string | null
           time_limit?: number
         }
         Relationships: [
@@ -99,6 +111,13 @@ export type Database = {
             columns: ["creator_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "challenges_source_question_id_fkey"
+            columns: ["source_question_id"]
+            isOneToOne: false
+            referencedRelation: "duel_questions"
             referencedColumns: ["id"]
           },
         ]
@@ -762,6 +781,7 @@ export type Database = {
         Args: { _amount: number; _reason: string; _user_id: string }
         Returns: undefined
       }
+      create_daily_challenges: { Args: { _count?: number }; Returns: number }
       finish_duel: { Args: { _duel_id: string }; Returns: undefined }
       join_duel_queue: { Args: never; Returns: Json }
       refresh_school_leaderboard: { Args: never; Returns: undefined }
