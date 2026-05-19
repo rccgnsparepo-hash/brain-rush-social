@@ -225,7 +225,7 @@ function DuelPage() {
             {user?.id === duel.player_a ? "Waiting for opponent to accept…" : "You've been challenged!"}
           </div>
           <div className="mt-1 text-xs text-muted-foreground">
-            {user?.id === duel.player_a ? `${opp?.display_name ?? "Opponent"} needs to accept` : `${me && (isA ? duel.b : duel.a)?.display_name ?? ""}`}
+            {user?.id === duel.player_a ? `${opp?.display_name ?? "Opponent"} needs to accept` : `From ${(isA ? duel.b : duel.a)?.display_name ?? "player"}`}
           </div>
           {user?.id === duel.player_b && (
             <button
