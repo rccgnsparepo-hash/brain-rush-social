@@ -203,6 +203,25 @@ function ArenaPage() {
           ))}
         </div>
       </section>
+
+      {invite && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-6">
+          <div className="w-full max-w-sm rounded-3xl glass-strong p-6 text-center animate-fade-in">
+            <Swords className="mx-auto h-10 w-10 text-neon-purple" />
+            <div className="mt-2 font-display text-xl font-bold">Duel challenge!</div>
+            <div className="mt-1 flex items-center justify-center gap-2 text-sm">
+              <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full gradient-primary">
+                {invite.from?.avatar_url ? <img src={invite.from.avatar_url} alt="" className="h-full w-full object-cover" /> : (invite.from?.avatar ?? "👤")}
+              </div>
+              <span className="font-semibold">{invite.from?.display_name ?? "Someone"}</span>
+              <span className="text-muted-foreground">wants to duel</span>
+            </div>
+            <button onClick={acceptInvite} className="mt-5 w-full rounded-full gradient-primary px-6 py-3 text-sm font-bold text-primary-foreground">
+              Accept
+            </button>
+          </div>
+        </div>
+      )}
     </AppShell>
   );
 }
