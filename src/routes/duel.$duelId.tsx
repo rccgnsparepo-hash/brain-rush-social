@@ -220,7 +220,22 @@ function DuelPage() {
       )}
 
       {duel.status === "waiting" && (
-        <div className="mt-4 text-center text-sm text-muted-foreground">Waiting for opponent…</div>
+        <div className="mt-4 glass-strong rounded-2xl p-6 text-center animate-fade-in">
+          <div className="font-display text-lg font-bold">
+            {user?.id === duel.player_a ? "Waiting for opponent to accept…" : "You've been challenged!"}
+          </div>
+          <div className="mt-1 text-xs text-muted-foreground">
+            {user?.id === duel.player_a ? `${opp?.display_name ?? "Opponent"} needs to accept` : `${me && (isA ? duel.b : duel.a)?.display_name ?? ""}`}
+          </div>
+          {user?.id === duel.player_b && (
+            <button
+              onClick={async () => { await supabase.rpc("accept_duel", { _duel_id: duelId }); }}
+              className="mt-4 w-full rounded-full gradient-primary px-6 py-3 text-sm font-bold text-primary-foreground"
+            >
+              Accept duel
+            </button>
+          )}
+        </div>
       )}
     </AppShell>
   );
