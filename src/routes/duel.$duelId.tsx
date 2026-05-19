@@ -67,19 +67,18 @@ function DuelPage() {
     return () => { supabase.removeChannel(ch); };
   }, [duelId, loadDuel]);
 
-  // When duel.current_round changes, load that round and reset timer
+  // When duel.current_round or status changes, load that round and reset timer
   useEffect(() => {
-    if (!duel) return;
+    if (!duel || duel.status !== "active") return;
     setRound(null);
     setPicked(null);
     setTimeLeft(ROUND_SECONDS);
-    if (duel.status === "active") {
-      const sequence = duel.current_round >= duel.total_rounds ? ["Final Round", "3", "2", "1", "Fight!!"] : ["3", "2", "1", "Fight!!"];
-      sequence.forEach((step, i) => window.setTimeout(() => setIntro(step as typeof intro), i * 520));
-      window.setTimeout(() => setIntro(null), sequence.length * 520);
-    }
+    const sequence = duel.current_round >= duel.total_rounds ? ["Final Round", "3", "2", "1", "Fight!!"] : ["3", "2", "1", "Fight!!"];
+    sequence.forEach((step, i) => window.setTimeout(() => setIntro(step as typeof intro), i * 520));
+    window.setTimeout(() => setIntro(null), sequence.length * 520);
     loadCurrentRound(duel);
-  }, [duel?.current_round, duel?.status, loadCurrentRound, duel]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [duel?.current_round, duel?.status]);
 
   // Round timer (server-authoritative resolve when timer ends)
   useEffect(() => {
