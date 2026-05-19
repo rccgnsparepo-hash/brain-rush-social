@@ -67,19 +67,18 @@ function DuelPage() {
     return () => { supabase.removeChannel(ch); };
   }, [duelId, loadDuel]);
 
-  // When duel.current_round changes, load that round and reset timer
+  // When duel.current_round or status changes, load that round and reset timer
   useEffect(() => {
-    if (!duel) return;
+    if (!duel || duel.status !== "active") return;
     setRound(null);
     setPicked(null);
     setTimeLeft(ROUND_SECONDS);
-    if (duel.status === "active") {
-      const sequence = duel.current_round >= duel.total_rounds ? ["Final Round", "3", "2", "1", "Fight!!"] : ["3", "2", "1", "Fight!!"];
-      sequence.forEach((step, i) => window.setTimeout(() => setIntro(step as typeof intro), i * 520));
-      window.setTimeout(() => setIntro(null), sequence.length * 520);
-    }
+    const sequence = duel.current_round >= duel.total_rounds ? ["Final Round", "3", "2", "1", "Fight!!"] : ["3", "2", "1", "Fight!!"];
+    sequence.forEach((step, i) => window.setTimeout(() => setIntro(step as typeof intro), i * 520));
+    window.setTimeout(() => setIntro(null), sequence.length * 520);
     loadCurrentRound(duel);
-  }, [duel?.current_round, duel?.status, loadCurrentRound, duel]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [duel?.current_round, duel?.status]);
 
   // Round timer (server-authoritative resolve when timer ends)
   useEffect(() => {
@@ -221,7 +220,22 @@ function DuelPage() {
       )}
 
       {duel.status === "waiting" && (
-        <div className="mt-4 text-center text-sm text-muted-foreground">Waiting for opponent…</div>
+        <div className="mt-4 glass-strong rounded-2xl p-6 text-center animate-fade-in">
+          <div className="font-display text-lg font-bold">
+            {user?.id === duel.player_a ? "Waiting for opponent to accept…" : "You've been challenged!"}
+          </div>
+          <div className="mt-1 text-xs text-muted-foreground">
+            {user?.id === duel.player_a ? `${opp?.display_name ?? "Opponent"} needs to accept` : `From ${(isA ? duel.b : duel.a)?.display_name ?? "player"}`}
+          </div>
+          {user?.id === duel.player_b && (
+            <button
+              onClick={async () => { await supabase.rpc("accept_duel", { _duel_id: duelId }); }}
+              className="mt-4 w-full rounded-full gradient-primary px-6 py-3 text-sm font-bold text-primary-foreground"
+            >
+              Accept duel
+            </button>
+          )}
+        </div>
       )}
     </AppShell>
   );

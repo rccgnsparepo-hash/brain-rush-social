@@ -772,6 +772,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_duel: { Args: { _duel_id: string }; Returns: undefined }
       advance_duel: { Args: { _duel_id: string }; Returns: undefined }
       advance_duel_from_round: {
         Args: { _duel_id: string; _round_number: number }

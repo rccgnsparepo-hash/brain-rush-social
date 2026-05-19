@@ -26,6 +26,7 @@ function ArenaPage() {
   const [activeDuels, setActiveDuels] = useState<any[]>([]);
   const [challenges, setChallenges] = useState<any[]>([]);
   const [topSchools, setTopSchools] = useState<{ school: string; xp: number }[]>([]);
+  const [invite, setInvite] = useState<{ duelId: string; from: any } | null>(null);
 
   const load = async () => {
     const [{ data: duels }, { data: ch }, { data: profs }] = await Promise.all([
@@ -55,54 +56,64 @@ function ArenaPage() {
       .channel("arena-duels")
       .on("postgres_changes", { event: "*", schema: "public", table: "duels" }, () => load())
       .subscribe();
-    return () => {
-      supabase.removeChannel(ch);
-    };
+    return () => { supabase.removeChannel(ch); };
   }, []);
 
-  // Listen for own duel match
+  // Presence heartbeat so the matchmaker can see we're online
+  useEffect(() => {
+    if (!user) return;
+    const beat = () => { supabase.rpc("touch_presence").then(() => {}); };
+    beat();
+    const t = setInterval(beat, 20000);
+    return () => clearInterval(t);
+  }, [user?.id]);
+
+  // Listen for incoming duel invites (I'm player_b on a waiting duel)
   useEffect(() => {
     if (!user) return;
     const ch = supabase
-      .channel(`my-duels-${user.id}`)
+      .channel(`my-invites-${user.id}`)
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "duels" },
-        (payload) => {
+        async (payload) => {
           const d = payload.new as DuelRow;
-          if (d.player_a === user.id || d.player_b === user.id) {
-            setMatching(false);
-            toast.success("Match found!");
-            nav(`/duel/${d.id}`);
+          if (d.player_b === user.id && d.status === "waiting") {
+            const { data: from } = await supabase.from("profiles").select("handle,display_name,avatar,avatar_url").eq("id", d.player_a).maybeSingle();
+            setInvite({ duelId: d.id, from });
           }
         },
       )
       .subscribe();
-    return () => {
-      supabase.removeChannel(ch);
-    };
-  }, [user, nav]);
+    return () => { supabase.removeChannel(ch); };
+  }, [user?.id]);
 
   const findMatch = async () => {
     if (!user) return;
     setMatching(true);
     const { data, error } = await supabase.rpc("join_duel_queue");
-    if (error) {
-      setMatching(false);
-      return toast.error(error.message);
-    }
-    const r = data as { matched: boolean; duel_id?: string };
+    if (error) { setMatching(false); return toast.error(error.message); }
+    const r = data as { matched: boolean; pending?: boolean; duel_id?: string };
     if (r.matched && r.duel_id) {
       setMatching(false);
+      toast.success(r.pending ? "Invite sent — waiting for accept" : "Match found!");
       nav(`/duel/${r.duel_id}`);
+    } else {
+      setMatching(false);
+      toast("No players online right now. Try again in a moment.");
     }
   };
 
-  const cancelMatch = async () => {
-    if (!user) return;
-    await supabase.from("duel_queue").delete().eq("user_id", user.id);
-    setMatching(false);
+  const cancelMatch = async () => { setMatching(false); };
+
+  const acceptInvite = async () => {
+    if (!invite) return;
+    const id = invite.duelId;
+    setInvite(null);
+    await supabase.rpc("accept_duel", { _duel_id: id });
+    nav(`/duel/${id}`);
   };
+
 
   return (
     <AppShell
@@ -192,6 +203,25 @@ function ArenaPage() {
           ))}
         </div>
       </section>
+
+      {invite && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-6">
+          <div className="w-full max-w-sm rounded-3xl glass-strong p-6 text-center animate-fade-in">
+            <Swords className="mx-auto h-10 w-10 text-neon-purple" />
+            <div className="mt-2 font-display text-xl font-bold">Duel challenge!</div>
+            <div className="mt-1 flex items-center justify-center gap-2 text-sm">
+              <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full gradient-primary">
+                {invite.from?.avatar_url ? <img src={invite.from.avatar_url} alt="" className="h-full w-full object-cover" /> : (invite.from?.avatar ?? "👤")}
+              </div>
+              <span className="font-semibold">{invite.from?.display_name ?? "Someone"}</span>
+              <span className="text-muted-foreground">wants to duel</span>
+            </div>
+            <button onClick={acceptInvite} className="mt-5 w-full rounded-full gradient-primary px-6 py-3 text-sm font-bold text-primary-foreground">
+              Accept
+            </button>
+          </div>
+        </div>
+      )}
     </AppShell>
   );
 }
