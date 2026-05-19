@@ -1,30 +1,23 @@
 import { AppShell } from "@/components/app-shell";
 import { PostCard } from "@/components/post-card";
-import { Flame, Sparkles, Image as ImageIcon, Crown } from "lucide-react";
+import { Flame, Sparkles } from "lucide-react";
 import { useAuth, levelProgress } from "@/lib/auth";
 import { useEffect, useState } from "react";
 import { fetchFeed } from "@/lib/feed";
 import type { FeedPost } from "@/lib/types";
 import { supabase } from "@/integrations/supabase/client";
 import { NotificationsBell } from "@/components/notifications-bell";
-import { ChallengeAttempt } from "@/components/challenge-attempt";
 
 
 function HomePage() {
   const { user, profile } = useAuth();
   const [posts, setPosts] = useState<FeedPost[]>([]);
   const [loading, setLoading] = useState(true);
-  const [daily, setDaily] = useState<any[]>([]);
 
   const load = async () => {
     if (!user) return;
     try {
-      await supabase.rpc("create_daily_challenges", { _count: 3 });
-      const [{ data: dailyRows }, data] = await Promise.all([
-        supabase.from("challenges").select("*").eq("is_daily", true).order("created_at", { ascending: false }).limit(3),
-        fetchFeed(user.id),
-      ]);
-      setDaily(dailyRows ?? []);
+      const data = await fetchFeed(user.id);
       setPosts(data);
     } finally {
       setLoading(false);
@@ -77,33 +70,25 @@ function HomePage() {
         </>
       }
     >
-      <div className="-mx-3 border-b border-glass-border bg-card/70 px-3 pb-3 pt-2">
-        <div className="flex items-center gap-7 text-sm font-bold text-muted-foreground">
-          <span className="text-foreground">Following</span>
-          <span className="border-b-2 border-foreground pb-3 text-foreground">Trending</span>
-          <span>Schools</span>
-        </div>
-      </div>
-
       {profile && (
-        <div className="-mx-3 flex items-center gap-3 border-b border-glass-border bg-card/70 px-3 py-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full gradient-primary text-xl">{profile.avatar}</div>
-          <div className="flex-1 text-muted-foreground">What's new?</div>
-          <ImageIcon className="h-5 w-5 text-muted-foreground" />
-          <Sparkles className="h-5 w-5 text-neon-purple" />
+        <div className="glass mb-3 rounded-2xl p-4 animate-fade-in">
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <span>Level {profile.level}</span>
+            <span>
+              {profile.xp.toLocaleString()} / {lvl.next.toLocaleString()} XP
+            </span>
+          </div>
+          <div className="mt-2 h-2 overflow-hidden rounded-full bg-secondary">
+            <div className="h-full gradient-primary transition-all" style={{ width: `${lvl.pct}%` }} />
+          </div>
+          <div className="mt-2 flex items-center justify-between text-xs">
+            <span className="text-muted-foreground">{profile.school}</span>
+            <span className="font-display font-bold text-gradient">@{profile.handle}</span>
+          </div>
         </div>
       )}
 
-      {daily.length > 0 && (
-        <section className="-mx-3 border-b border-glass-border bg-card/70 p-3">
-          <h2 className="mb-3 flex items-center gap-2 font-display text-xl font-bold"><Crown className="h-5 w-5 text-xp" /> Daily XP</h2>
-          <div className="no-scrollbar flex gap-3 overflow-x-auto">
-            {daily.map((c) => <div key={c.id} className="w-[82%] shrink-0"><ChallengeAttempt challenge={c} compact /></div>)}
-          </div>
-        </section>
-      )}
-
-      <div className="-mx-3 space-y-3 bg-background pt-3">
+      <div className="space-y-3">
         {loading && <div className="text-center text-sm text-muted-foreground">Loading feed…</div>}
         {!loading && posts.length === 0 && (
           <div className="glass rounded-2xl p-6 text-center text-sm text-muted-foreground">

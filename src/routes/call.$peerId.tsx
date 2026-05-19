@@ -6,7 +6,7 @@ import { ArrowLeft, Mic, MicOff, Video, VideoOff, PhoneOff } from "lucide-react"
 import { Room, RoomEvent, Track, type RemoteTrack, type RemoteParticipant, createLocalTracks } from "livekit-client";
 import { supabase } from "@/integrations/supabase/client";
 
-async function issueToken(payload: { room: string }) {
+async function issueToken(payload: { room: string; identity: string }) {
   const { data, error } = await supabase.functions.invoke("livekit-token", { body: payload });
   if (error) throw error;
   return data as { token: string; url: string };
@@ -21,7 +21,6 @@ function CallPage() {
   const [room, setRoom] = useState<Room | null>(null);
   const [muted, setMuted] = useState(false);
   const [camOn, setCamOn] = useState(!!video);
-  const [status, setStatus] = useState("Joining…");
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
   const remoteAudioRef = useRef<HTMLAudioElement>(null);
@@ -32,16 +31,13 @@ function CallPage() {
     let cancelled = false;
     (async () => {
       const roomName = [user.id, peerId].sort().join("__");
-      const { token, url } = await issueToken({ room: roomName });
+      const { token, url } = await issueToken({ room: roomName, identity: user.id });
       r = new Room({ adaptiveStream: true, dynacast: true });
-      r.on(RoomEvent.ParticipantConnected, () => setStatus("Connected"));
-      r.on(RoomEvent.ParticipantDisconnected, () => setStatus("Waiting for peer…"));
       r.on(RoomEvent.TrackSubscribed, (track: RemoteTrack, _pub, _participant: RemoteParticipant) => {
         if (track.kind === Track.Kind.Video && remoteVideoRef.current) track.attach(remoteVideoRef.current);
         if (track.kind === Track.Kind.Audio && remoteAudioRef.current) track.attach(remoteAudioRef.current);
       });
       await r.connect(url, token);
-      setStatus(r.remoteParticipants.size ? "Connected" : "Waiting for peer…");
       const tracks = await createLocalTracks({ audio: true, video });
       for (const t of tracks) {
         await r.localParticipant.publishTrack(t);
@@ -49,9 +45,9 @@ function CallPage() {
       }
       if (cancelled) { r.disconnect(); return; }
       setRoom(r);
-    })().catch((e) => { console.error("livekit", e); setStatus(e?.message ?? "Call failed"); });
+    })().catch((e) => console.error("livekit", e));
     return () => { cancelled = true; r?.disconnect(); };
-  }, [user?.id, peerId, video]);
+  }, [user?.id, peerId, video, issueToken]);
 
   const toggleMute = async () => {
     if (!room) return;
@@ -68,15 +64,14 @@ function CallPage() {
   const hangup = () => { room?.disconnect(); nav(`/chats/${peerId}`); };
 
   return (
-    <AppShell fullScreen title={
+    <AppShell title={
       <>
         <button onClick={hangup} className="rounded-full glass p-2"><ArrowLeft className="h-4 w-4" /></button>
         <div className="font-display font-bold">{video ? "Video call" : "Voice call"}</div>
         <div className="rounded-full bg-destructive/15 px-2 py-1 text-[10px] font-semibold uppercase text-destructive">Live</div>
       </>
     }>
-      <div className="relative h-[calc(100dvh-150px)] w-full overflow-hidden bg-background">
-        <div className="absolute left-3 top-3 z-10 rounded-full glass px-3 py-1 text-xs font-semibold">{status}</div>
+      <div className="relative aspect-[3/4] w-full overflow-hidden rounded-2xl bg-black">
         <video ref={remoteVideoRef} autoPlay playsInline className="h-full w-full object-cover" />
         <audio ref={remoteAudioRef} autoPlay />
         <video ref={localVideoRef} autoPlay playsInline muted className="absolute bottom-3 right-3 h-32 w-24 rounded-xl border border-glass-border object-cover" />

@@ -19,9 +19,6 @@ export interface ChallengeRow {
   reward_xp: number;
   difficulty: Difficulty;
   solved_count: number;
-  is_daily?: boolean;
-  active_on?: string | null;
-  category?: string;
 }
 
 export interface FeedPost {

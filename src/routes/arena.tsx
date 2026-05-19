@@ -5,7 +5,6 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
-import { ChallengeAttempt } from "@/components/challenge-attempt";
 
 
 interface DuelRow {
@@ -40,7 +39,7 @@ function ArenaPage() {
         .in("status", ["active", "waiting"])
         .order("created_at", { ascending: false })
         .limit(10),
-      supabase.from("challenges").select("*").order("created_at", { ascending: false }).limit(8),
+      supabase.from("challenges").select("id, question, difficulty, reward_xp, time_limit").order("created_at", { ascending: false }).limit(5),
       supabase.from("profiles").select("school, xp"),
     ]);
     setActiveDuels(duels ?? []);
@@ -161,7 +160,20 @@ function ArenaPage() {
         </h2>
         <div className="space-y-2">
           {challenges.length === 0 && <div className="glass rounded-2xl p-4 text-center text-xs text-muted-foreground">No challenges yet.</div>}
-          {challenges.map((p) => <ChallengeAttempt key={p.id} challenge={p} compact />)}
+          {challenges.map((p) => (
+            <div key={p.id} className="glass rounded-2xl p-3">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-muted-foreground uppercase">{p.difficulty}</span>
+                <span className="flex items-center gap-1 text-muted-foreground">
+                  <Clock className="h-3 w-3" /> {p.time_limit}s
+                </span>
+              </div>
+              <p className="mt-1 line-clamp-2 text-sm font-medium">{p.question}</p>
+              <div className="mt-2 text-right">
+                <span className="rounded-full gradient-hot px-3 py-1 text-xs font-bold text-primary-foreground">+{p.reward_xp} XP</span>
+              </div>
+            </div>
+          ))}
         </div>
       </section>
 
