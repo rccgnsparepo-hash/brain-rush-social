@@ -18,6 +18,7 @@ import RecapPage from "@/routes/recap.$duelId";
 import ChatsIndexPage from "@/routes/chats.index";
 import ChatThreadPage from "@/routes/chats.$userId";
 import CallPage from "@/routes/call.$peerId";
+import AdminPage from "@/routes/admin";
 
 const queryClient = new QueryClient();
 
@@ -35,7 +36,7 @@ function NotFound() {
 
 function Shell() {
   const { pathname } = useLocation();
-  const showNav = pathname !== "/login" && pathname !== "/signup" && !pathname.startsWith("/chats/") && !pathname.startsWith("/call/");
+  const showNav = pathname !== "/login" && pathname !== "/signup" && pathname !== "/admin" && !pathname.startsWith("/chats/") && !pathname.startsWith("/call/");
   return (
     <AuthGate>
       <Routes>
@@ -53,6 +54,7 @@ function Shell() {
         <Route path="/chats" element={<ChatsIndexPage />} />
         <Route path="/chats/:userId" element={<ChatThreadPage />} />
         <Route path="/call/:peerId" element={<CallPage />} />
+        <Route path="/admin" element={<AdminPage />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       {showNav && <BottomNav />}
