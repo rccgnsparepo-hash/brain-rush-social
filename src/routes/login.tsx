@@ -78,6 +78,11 @@ function LoginPage() {
           Create an account
         </Link>
       </p>
+      <p className="mt-2 text-center text-xs text-muted-foreground">
+        <Link to="/admin" className="font-semibold text-neon-purple">
+          Admin sign in →
+        </Link>
+      </p>
 
       <style>{`.ms-input{background:oklch(1 0 0 / 0.06);border:1px solid var(--glass-border);border-radius:0.75rem;padding:0.75rem 0.875rem;font-size:14px;color:var(--foreground);outline:none;width:100%}.ms-input:focus{border-color:var(--neon-purple)}`}</style>
     </div>
