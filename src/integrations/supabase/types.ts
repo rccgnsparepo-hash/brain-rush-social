@@ -735,6 +735,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       xp_events: {
         Row: {
           amount: number
@@ -783,7 +804,15 @@ export type Database = {
         Returns: undefined
       }
       create_daily_challenges: { Args: { _count?: number }; Returns: number }
+      duel_question_stats: { Args: never; Returns: Json }
       finish_duel: { Args: { _duel_id: string }; Returns: undefined }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       join_duel_queue: { Args: never; Returns: Json }
       refresh_school_leaderboard: { Args: never; Returns: undefined }
       resolve_duel_round: { Args: { _round_id: string }; Returns: undefined }
@@ -800,6 +829,7 @@ export type Database = {
       touch_presence: { Args: never; Returns: undefined }
     }
     Enums: {
+      app_role: "admin" | "user"
       difficulty: "easy" | "medium" | "hard"
       duel_status: "waiting" | "active" | "finished" | "cancelled"
       message_kind: "text" | "image" | "video" | "file" | "voice" | "view_once"
@@ -942,6 +972,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: ["admin", "user"],
       difficulty: ["easy", "medium", "hard"],
       duel_status: ["waiting", "active", "finished", "cancelled"],
       message_kind: ["text", "image", "video", "file", "voice", "view_once"],
